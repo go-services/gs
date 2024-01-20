@@ -1,7 +1,10 @@
 name: Run docs workflow
-on: workflow_dispatch
-permissions:
-  contents: write
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - docs/**
 jobs:
   trigger_workflow:
     runs-on: ubuntu-latest
