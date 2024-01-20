@@ -3,7 +3,7 @@ title: "Services"
 weight: 1
 ---
 
-## Services Update
+## Services
 
 Services are the building blocks of your project. They are the main components that you will use to build your infrastructure.
 
@@ -24,3 +24,7 @@ type Service interface {
 	Concat(context.Context, ConcatRequest) (*ConcatResponse, error)
 }
 ```
+
+## HTTP
+
+Services can be exposed over HTTP using the `@http` annotation. The annotation can be used on service methods.
