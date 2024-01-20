@@ -3,7 +3,7 @@ title: "Services"
 weight: 1
 ---
 
-## Services
+## Services Updated
 
 Services are the building blocks of your project. They are the main components that you will use to build your infrastructure.
 
