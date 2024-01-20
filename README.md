@@ -1,6 +1,9 @@
 # Go Services
 `gs` is an open-source command-line interface (CLI) tool designed for Go developers to accelerate the development of web applications. It automates and simplifies various tasks, removing the need for repetitive boilerplate code, and ensures a more efficient development process.
 
+# Documentation
+For more information, please refer to the [documentation](https://www.go-services.dev/).
+
 ## Features
 - Scaffold new Go web applications with minimal setup
 - Automated generation of common components (e.g.,  endpoints, transport, encode/decode, etc.)
