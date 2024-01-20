@@ -1,0 +1,20 @@
+name: Run docs workflow
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  trigger_workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger workflow
+        uses: convictional/trigger-workflow-and-wait@v1.6.1
+        with:
+          owner: go-services
+          repo: gs-docs
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow_file_name: main.yaml
+          ref: main
+          wait_interval: 30
+          propagate_failure: true
+          trigger_workflow: true
+          wait_workflow: true
