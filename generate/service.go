@@ -2,10 +2,11 @@ package generate
 
 import (
 	"fmt"
+	"github.com/iancoleman/strcase"
 	"gs/assets"
+	"gs/config"
 	"gs/fs"
 	"gs/parser"
-	"log"
 	"os/exec"
 	"path"
 )
@@ -145,6 +146,7 @@ func generateHttpTransport(svc parser.Service, httpTransportPath string) error {
 }
 
 func generateService(svc parser.Service) error {
+	log.Debug("Starting service generation for ", svc.Name)
 	pth := path.Join(genPath(), "services", svc.Package)
 	epFolder := path.Join(pth, "endpoint")
 	httpTransportPath := path.Join(pth, "transport", "http")
@@ -153,11 +155,13 @@ func generateService(svc parser.Service) error {
 	}
 	err := generateEndpoints(svc, epFolder)
 	if err != nil {
+		log.Error("Error generating endpoints for ", svc.Name, ": ", err)
 		return err
 	}
 
 	err = generateHttpTransport(svc, httpTransportPath)
 	if err != nil {
+		log.Error("Error generating HTTP transport for ", svc.Name, ": ", err)
 		return err
 	}
 
@@ -169,6 +173,10 @@ func generateService(svc parser.Service) error {
 		),
 		svc,
 	)
+	if err != nil {
+		log.Error("Error generating service template for ", svc.Name, ": ", err)
+	}
+	log.Debug("Finished service generation for ", svc.Name)
 	return err
 }
 
@@ -178,16 +186,16 @@ func (g serviceGenerator) Generate() error {
 		if err != nil {
 			return err
 		}
-		lambdaHandler := path.Join(cmdPath(), svc.Name)
-		if exists, _ := fs.Exists(lambdaHandler); !exists {
-			_ = fs.CreateFolder(lambdaHandler)
+		handlerPath := path.Join(cmdPath(), svc.Name)
+		if exists, _ := fs.Exists(handlerPath); !exists {
+			_ = fs.CreateFolder(handlerPath)
 		}
 
-		lambdaHandler = path.Join(lambdaHandler, "lambda.go")
-		if exists, _ := fs.Exists(lambdaHandler); !exists {
+		handlerPath = path.Join(handlerPath, fmt.Sprintf("%s.go", strcase.ToSnake(svc.Name)))
+		if exists, _ := fs.Exists(handlerPath); !exists {
 			err = assets.ParseAndWriteTemplate(
-				"cmd/lambda/service.go.tmpl",
-				lambdaHandler,
+				"cmd/service.go.tmpl",
+				handlerPath,
 				svc,
 			)
 			if err != nil {
@@ -195,28 +203,22 @@ func (g serviceGenerator) Generate() error {
 			}
 		}
 	}
-	cmd := exec.Command("go", "mod", "tidy")
-
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatal(err)
+	handlerPath := cmdPath()
+	if exists, _ := fs.Exists(handlerPath); !exists {
+		_ = fs.CreateFolder(handlerPath)
 	}
 
-	genStack := path.Join("stacks", "gen")
-	if exists, _ := fs.Exists(genStack); !exists {
-		if exists, _ := fs.Exists(genStack); !exists {
-			_ = fs.CreateFolder(genStack)
+	handlerPath = path.Join(handlerPath, fmt.Sprintf("%s.go", strcase.ToSnake(config.Get().Module)))
+	if exists, _ := fs.Exists(handlerPath); !exists {
+		err := assets.ParseAndWriteTemplate(
+			"cmd/all.go.tmpl",
+			handlerPath,
+			g.services,
+		)
+		if err != nil {
+			return err
 		}
 	}
-	err = assets.ParseAndWriteTemplate(
-		"project/stacks/gen/gen.ts.tmpl",
-		path.Join(genStack, "index.ts"),
-		g.services,
-	)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	cmd := exec.Command("go", "mod", "tidy")
+	return cmd.Run()
 }

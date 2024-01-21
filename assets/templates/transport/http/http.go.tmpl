@@ -113,17 +113,10 @@ func NewHttpTransport(makeEndpoints []func(Options) HTTP, opts ...Option) Transp
 	for i, makeEndpoint := range makeEndpoints {
 		endpoints[i] = makeEndpoint(httpOptions)
 	}
-	return &httpTransport{
+	t :=  &httpTransport{
 		options_:  *httpOptions,
 		endpoints: endpoints,
 	}
-}
-
-func (t httpTransport) Address() string {
-	return t.options_.address
-}
-
-func (t httpTransport) Router() *chi.Mux {
 	for _, endpoint := range t.endpoints {
 		for _, route := range endpoint.MethodRoutes() {
 			var methods []string
@@ -138,6 +131,15 @@ func (t httpTransport) Router() *chi.Mux {
 	if t.options_.notFoundHandler != nil {
 		t.options_.router.NotFound(t.options_.notFoundHandler)
 	}
+
+	return t
+}
+
+func (t httpTransport) Address() string {
+	return t.options_.address
+}
+
+func (t httpTransport) Router() *chi.Mux {
 	return t.options_.router
 }
 

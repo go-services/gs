@@ -12,7 +12,7 @@ Services are defined using the `@service` annotation. The annotation can be used
 ```go
 // Service is the interface that provides the Sum and Concat methods.
 //
-// @service(name="numbers", route="/numbers")
+// @service(name="example", route="/example")
 type Service interface {
 	// Sum adds together two integers and returns the result.
 	//

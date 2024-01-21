@@ -1,0 +1,11 @@
+{{- /*gotype: gs/parser.Service*/ -}}
+package main
+
+import (
+	genSvc "{{ .Config.Module }}/gen/services/{{ .Package }}"
+	service "{{ .Import }}"
+)
+
+func main() {
+	genSvc.New(service.New()).Run()
+}

@@ -4,11 +4,16 @@ import (
 	"embed"
 	"fmt"
 	"github.com/iancoleman/strcase"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/tools/imports"
 	"gs/fs"
 	"strings"
 	"text/template"
 )
+
+var log = logrus.WithFields(logrus.Fields{
+	"package": "assets",
+})
 
 //go:embed templates/*
 var folder embed.FS
@@ -65,8 +70,10 @@ func ParseTemplate(path string, data interface{}) (string, error) {
 }
 
 func ParseAndWriteTemplate(path, outPath string, data interface{}) error {
+	log.Debug("Starting ParseAndWriteTemplate with path: ", path, " and outPath: ", outPath)
 	content, err := ParseTemplate(path, data)
 	if err != nil {
+		log.Error("Error in ParseTemplate: ", err)
 		return err
 	}
 	isGoOutput := strings.HasSuffix(outPath, ".go")
@@ -77,9 +84,15 @@ func ParseAndWriteTemplate(path, outPath string, data interface{}) error {
 		})
 		outContent = string(formatted)
 		if err != nil {
+			log.Error("Error in imports.Process: ", err)
 			fmt.Println(content)
 			return err
 		}
 	}
-	return fs.WriteFile(outPath, outContent)
+	err = fs.WriteFile(outPath, outContent)
+	if err != nil {
+		log.Error("Error in fs.WriteFile: ", err)
+	}
+	log.Debug("Finished ParseAndWriteTemplate with path: ", path, " and outPath: ", outPath)
+	return err
 }

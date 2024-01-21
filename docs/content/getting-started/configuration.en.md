@@ -12,8 +12,10 @@ If no `gs.json` file is found, GS will use the default configuration.
 
 ```json
 {
-  "gen_path": "gen",
-  "cmd_path" : "cmd"
+  "paths": {
+    "gen": "gen",
+    "cmd": "cmd"
+  }
 }
 ```
 

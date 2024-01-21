@@ -3,35 +3,29 @@
 package http
 
 import (
-	genEndpoints "{{ .Config.Module }}/gen/services/{{.Name}}/endpoint"
+	genEndpoints "{{ .Config.Module }}/gen/services/{{.Package}}/endpoint"
 	genHttp "{{ .Config.Module }}/gen/transport/http"
 )
 
-type serviceOptions struct {
-	options      []genHttp.Option
+type endpointOptions struct {
 {{range  .Endpoints }}
 	{{lowerFirst .Name }}HTTPOptions []{{.Name}}HTTPOption
 {{end}}
 }
 
-type ServiceHTTPOption func(*serviceOptions)
+type EndpointHTTPOption func(*endpointOptions)
 
-func WithHTTPOptions(options ...genHttp.Option) ServiceHTTPOption {
-	return func(o *serviceOptions) {
-		o.options = append(o.options, options...)
-	}
-}
 
 {{range  .Endpoints }}
-func With{{.Name }}HTTPOptions ({{lowerFirst .Name }}HTTPOptions ...{{ .Name }}HTTPOption) ServiceHTTPOption {
-	return func(o *serviceOptions) {
+func With{{.Name }}HTTPOptions ({{lowerFirst .Name }}HTTPOptions ...{{ .Name }}HTTPOption) EndpointHTTPOption {
+	return func(o *endpointOptions) {
 		o.{{lowerFirst .Name }}HTTPOptions = append(o.{{lowerFirst .Name }}HTTPOptions , {{lowerFirst .Name }}HTTPOptions ...)
 	}
 }
 {{end}}
 
-func MakeHttpTransport(endpoints genEndpoints.Endpoints, opts ...ServiceHTTPOption) genHttp.Transport {
-	svcOptions := &serviceOptions{}
+func MakeHttpTransport(endpoints genEndpoints.Endpoints, httpOptions []genHttp.Option, opts ...EndpointHTTPOption) genHttp.Transport {
+	svcOptions := &endpointOptions{}
 	for _, o := range opts {
 		o(svcOptions)
 	}
@@ -43,5 +37,5 @@ func MakeHttpTransport(endpoints genEndpoints.Endpoints, opts ...ServiceHTTPOpti
 	},
 {{end}}
 }
-	return genHttp.NewHttpTransport(transportEndpoints, svcOptions.options...)
+	return genHttp.NewHttpTransport(transportEndpoints, httpOptions...)
 }

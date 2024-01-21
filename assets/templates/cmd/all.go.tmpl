@@ -1,0 +1,79 @@
+{{- /*gotype: []gs/parser.Service*/ -}}
+package main
+
+{{ $firstSvc := index . 0}}
+import (
+	genHttp "{{ $firstSvc.Config.Module }}/gen/transport/http"
+	{{ range .}}
+	gen{{camelCase .Name}}Svc "{{ .Config.Module }}/gen/services/{{ .Package }}"
+	{{camelCase .Name}} "{{ .Import }}"
+	{{ end }}
+	chi "github.com/go-chi/chi/v5"
+	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"runtime/debug"
+	"syscall"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/oklog/run"
+)
+
+func main() {
+	router := chi.NewRouter()
+	logger := log.NewLogfmtLogger(os.Stdout)
+	{{ range .}}
+	gen{{camelCase .Name}}Svc.New(
+			{{camelCase .Name}}.New(),
+			gen{{camelCase .Name}}Svc.WithHTTPOptions(
+			genHttp.WithRouter(router),
+		),
+	)
+	{{ end }}
+
+	address := ":8080"
+	listener, err := net.Listen("tcp",address)
+
+	if err != nil {
+		_ = logger.Log("transport", "HTTP", "during", "Listen", "err", err)
+		os.Exit(1)
+	}
+	var g run.Group
+	{
+		g.Add(func() error {
+		_ = logger.Log("transport", "HTTP", "addr", address)
+		return http.Serve(listener, router)
+		}, func(error) {
+			err := listener.Close()
+			if err != nil {
+				fmt.Printf("There where blocked Accept operations when closing listener : %v", err)
+			}
+		})
+	}
+	{
+		var (
+			cancelInterrupt = make(chan struct{})
+			c               = make(chan os.Signal, 2)
+		)
+		g.Add(func() error {
+			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+			select {
+			case sig := <-c:
+				return fmt.Errorf("received signal %s", sig)
+			case <-cancelInterrupt:
+				return nil
+			}
+		}, func(error) {
+			close(cancelInterrupt)
+		})
+		defer close(c)
+	}
+	// run the group
+	if err := level.Error(logger).Log("exit", g.Run()); err != nil {
+		println("error while writing log, this should never happen...")
+		debug.PrintStack()
+	}
+}

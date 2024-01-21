@@ -12,10 +12,20 @@ import (
 
 var log = logrus.WithFields(logrus.Fields{"package": "config"})
 
+type GSPathConfig struct {
+	Gen string `json:"gen"`
+	Cmd string `json:"cmd"`
+}
+
+type SSTConfig struct {
+	Path string `json:"path"`
+}
+
 type GSConfig struct {
-	Module  string `json:"-"`
-	GenPath string `json:"gen_path"`
-	CmdPath string `json:"cmd_path"`
+	Module          string       `json:"-"`
+	Paths           GSPathConfig `json:"paths"`
+	SST             *SSTConfig   `json:"sst"`
+	WatchExtensions []string     `json:"watch_extensions"`
 }
 
 var config *GSConfig
@@ -32,10 +42,20 @@ func Get() *GSConfig {
 	return config
 }
 
+func (c *GSConfig) Reload() {
+	_cnf, err := read()
+	if err != nil {
+		log.Errorf("Could not read module name: %s", err)
+		panic(err)
+	}
+	config = _cnf
+}
 func readConfig() *GSConfig {
 	cnf := &GSConfig{
-		GenPath: "gen",
-		CmdPath: "cmd",
+		Paths: GSPathConfig{
+			Gen: "gen",
+			Cmd: "cmd",
+		},
 	}
 	if exists, _ := fs.Exists(".gs.json"); !exists {
 		return cnf

@@ -8,13 +8,25 @@ import (
 	genHttp "{{ .Config.Module }}/gen/transport/http"
 	service "{{ .Import }}"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/oklog/run"
+	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"runtime/debug"
+	"syscall"
 )
 
 type Middleware func(service.{{.Interface}}) service.{{.Interface}}
 
 type options struct {
+	httpOptions      []genHttp.Option
+	serviceLogger     log.Logger
 	serviceMiddleware []Middleware
-	httpOptions       []genServiceHttp.ServiceHTTPOption
+	endpointsHTTPOptions       []genServiceHttp.EndpointHTTPOption
 	endpointOptions   []genEndpoint.Option
 }
 
@@ -26,7 +38,7 @@ func WithServiceMiddleware(middleware ...Middleware) Option {
 	}
 }
 
-func WithHttpOptions(httpOptions ...genServiceHttp.ServiceHTTPOption) Option {
+func WithHTTPOptions(httpOptions ...genHttp.Option) Option {
 	return func(o *options) {
 		o.httpOptions = append(o.httpOptions, httpOptions...)
 	}
@@ -38,8 +50,15 @@ func WithEndpointOptions(endpointOptions ...genEndpoint.Option) Option {
 	}
 }
 
+func WithLogger(logger log.Logger) Option {
+	return func(o *options) {
+		o.serviceLogger = logger
+	}
+}
+
 type GeneratedService interface {
 	Router() *chi.Mux
+	Run()
 }
 
 type generatedService struct {
@@ -52,16 +71,70 @@ func New(svc service.{{.Interface}}, options ...Option) GeneratedService {
 	for _, option := range options {
 		option(&genSvc.options)
 	}
+	if genSvc.options.serviceLogger == nil {
+		genSvc.options.serviceLogger = log.NewLogfmtLogger(os.Stdout)
+	}
 
 	for _, m := range genSvc.options.serviceMiddleware {
 		svc = m(svc)
 	}
 	endpoints := genEndpoint.MakeEndpoints(svc, genSvc.options.endpointOptions...)
-	genSvc.http = genServiceHttp.MakeHttpTransport(endpoints, genSvc.options.httpOptions...)
+	genSvc.http = genServiceHttp.MakeHttpTransport(endpoints, genSvc.options.httpOptions, genSvc.options.endpointsHTTPOptions...)
 
 	return genSvc
 }
 
 func (service generatedService) Router() *chi.Mux {
 	return service.http.Router()
+}
+
+
+func (service generatedService) Run() {
+	var g run.Group
+	{
+		err := setupTransports(service, &g)
+		if err != nil {
+			_ = service.options.serviceLogger.Log("transport", "HTTP", "during", "Listen", "err", err)
+			os.Exit(1)
+		}
+	}
+	{
+		var (
+			cancelInterrupt = make(chan struct{})
+			c               = make(chan os.Signal, 2)
+		)
+		g.Add(func() error {
+			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+			select {
+			case sig := <-c:
+				return fmt.Errorf("received signal %s", sig)
+			case <-cancelInterrupt:
+				return nil
+			}
+		}, func(error) {
+			close(cancelInterrupt)
+		})
+		defer close(c)
+	}
+	// run the group
+	if err := level.Error(service.options.serviceLogger).Log("exit", g.Run()); err != nil {
+		println("error while writing log, this should never happen...")
+		debug.PrintStack()
+	}
+}
+func setupTransports(service generatedService, g *run.Group) error {
+	listener, err := net.Listen("tcp", service.http.Address())
+	if err != nil {
+		return err
+	}
+	g.Add(func() error {
+		_ = service.options.serviceLogger.Log("transport", "HTTP", "addr", service.http.Address())
+		return http.Serve(listener, service.http.Router())
+	}, func(error) {
+		err := listener.Close()
+		if err != nil {
+			fmt.Printf("There where blocked Accept operations when closing listener : %v", err)
+		}
+	})
+	return nil
 }

@@ -2,7 +2,7 @@
 package main
 
 import (
-	genSvc "{{ .Config.Module }}/gen/services/{{ .Name }}"
+	genSvc "{{ .Config.Module }}/gen/services/{{ .Package }}"
 	service "{{ .Import }}"
 	"github.com/aws/aws-lambda-go/lambda"
 	chiadapter "github.com/awslabs/aws-lambda-go-api-proxy/chi"

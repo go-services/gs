@@ -7,7 +7,6 @@ import (
 	"github.com/go-services/code"
 	"github.com/go-services/source"
 	"github.com/iancoleman/strcase"
-	"github.com/sirupsen/logrus"
 	"gs/config"
 	"io/ioutil"
 	"path"
@@ -16,10 +15,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 )
-
-var log = logrus.WithFields(logrus.Fields{
-	"package": "api",
-})
 
 // this is used from findStruct() if the file was already read we don't
 // want to spend all the time to read and parse it again
@@ -146,6 +141,7 @@ func filterMethods(methods []source.InterfaceMethod) (list []source.InterfaceMet
 }
 
 func FindServices(files []AnnotatedFile) (services []Service, err error) {
+	fileSourceCache = map[string]*source.Source{}
 	for _, file := range files {
 		svc, err := parseService(file)
 		if err != nil {
@@ -168,11 +164,11 @@ func FindServices(files []AnnotatedFile) (services []Service, err error) {
 }
 
 func getPackageImport(module string, pth string, pkg string) string {
-	dir := filepath.Dir(filepath.Dir(pth))
+	dir := filepath.Dir(pth)
 	if dir == "." {
 		return fmt.Sprintf("%s/%s", module, pkg)
 	}
-	return fmt.Sprintf("%s/%s/%s", module, dir, pkg)
+	return fmt.Sprintf("%s/%s", module, dir)
 }
 
 func findServiceInterface(src *source.Source) (*source.Interface, *annotation.Annotation) {
@@ -300,9 +296,10 @@ func fixMethodImport(tp code.Type, imp, filePath string) code.Type {
 	if filepath.Ext(filePath) != "" {
 		filePath = filepath.Dir(filePath)
 	}
+	s := strings.Split(imp, "/")
 	if tp.Import == nil && isExported(tp.Qualifier) {
 		tp.Import = code.NewImportWithFilePath(
-			"",
+			s[len(s)-1],
 			imp,
 			filePath,
 		)

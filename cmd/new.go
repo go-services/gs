@@ -61,31 +61,10 @@ func generateProject(name string) error {
 		return err
 	}
 
+	_ = fs.CreateFolder(path.Join(formattedName, "example"))
 	err = assets.ParseAndWriteTemplate(
-		"project/sst.config.ts.tmpl",
-		path.Join(formattedName, "sst.config.ts"),
-		map[string]string{
-			"Name": formattedName,
-		},
-	)
-	if err != nil {
-		return err
-	}
-
-	_ = fs.CreateFolder(path.Join(formattedName, "stacks", "gen"))
-	err = assets.ParseAndWriteTemplate(
-		"project/stacks/gen/gen.ts.tmpl",
-		path.Join(formattedName, "stacks", "gen", "index.ts"),
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-
-	_ = fs.CreateFolder(path.Join(formattedName, "numbers"))
-	err = assets.ParseAndWriteTemplate(
-		"project/numbers/service.go.tmpl",
-		path.Join(formattedName, "numbers", "service.go"),
+		"project/example/service.go.tmpl",
+		path.Join(formattedName, "example", "service.go"),
 		map[string]string{
 			"Module": strcase.ToSnake(formattedName),
 		},
@@ -120,19 +99,8 @@ func generateProject(name string) error {
 		log.Fatal(err)
 	}
 
-	log.Infof("Installing dependencies")
-	npmCmd := exec.Command("npm", "install")
-	npmCmd.Stdout = os.Stdout
-	npmCmd.Stderr = os.Stderr
-	npmCmd.Stdin = os.Stdin
-	err = npmCmd.Run()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	log.Infof("Project %s created", formattedName)
-	log.Infof("Run `cd %s && npm dev` to start the app", formattedName)
+	log.Infof("Run `cd %s && go run %s.go` to start the app", formattedName, strcase.ToSnake(formattedName))
 
 	return nil
 }

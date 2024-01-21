@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/go-services/source"
+	"gs/config"
 	"gs/fs"
 	"os"
 	"path/filepath"
@@ -78,6 +79,7 @@ func findGoFiles(root string) ([]string, error) {
 	var goFiles []string
 	ignoreSet := make(map[string]bool)
 	var walkDir func(string) error
+	alwaysIgnorePatterns = append(alwaysIgnorePatterns, config.Get().Paths.Gen)
 	var globalIgnoredPatters []string = append(alwaysIgnorePatterns, commonIgnoreFiles...)
 	times := 0
 	walkDir = func(path string) error {

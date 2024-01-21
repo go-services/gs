@@ -28,6 +28,7 @@ func init() {
 }
 
 func generateServices() error {
+	log.Info("Generating services")
 	cnf := config.Get()
 	if cnf.Module == "" {
 		logrus.Error("Not in the root of the module")
@@ -52,6 +53,14 @@ func generateServices() error {
 	err = svcGen.Generate()
 	if err != nil {
 		return err
+	}
+
+	if cnf.SST != nil {
+		sstGen := generate.NewSSTPlugin(services)
+		err = sstGen.Generate()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
