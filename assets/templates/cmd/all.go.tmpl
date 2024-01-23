@@ -5,8 +5,8 @@ package main
 import (
 	genHttp "{{ $firstSvc.Config.Module }}/gen/transport/http"
 	{{ range .}}
-	gen{{camelCase .Name}}Svc "{{ .Config.Module }}/gen/services/{{ .Package }}"
-	{{camelCase .Name}} "{{ .Import }}"
+	gen{{camelCase .Name}}Svc "{{ .Config.Module }}/gen/services/{{ .FormattedName }}"
+	{{camelCase .Name}} "{{ .Config.Module }}/cmd/app/{{ .FormattedName }}"
 	{{ end }}
 	chi "github.com/go-chi/chi/v5"
 	"fmt"
@@ -26,8 +26,7 @@ func main() {
 	router := chi.NewRouter()
 	logger := log.NewLogfmtLogger(os.Stdout)
 	{{ range .}}
-	gen{{camelCase .Name}}Svc.New(
-			{{camelCase .Name}}.New(),
+	{{camelCase .Name}}.New{{.Interface}}(
 			gen{{camelCase .Name}}Svc.WithHTTPOptions(
 			genHttp.WithRouter(router),
 		),

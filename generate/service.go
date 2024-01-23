@@ -59,7 +59,7 @@ func generateEndpoints(sv parser.Service, endpointPath string) error {
 			),
 			EndpointMethodData{
 				Module:           sv.Config.Module,
-				Service:          sv.Package,
+				Service:          sv.FormattedName,
 				ServiceImport:    sv.Import,
 				ServiceInterface: sv.Interface,
 				Endpoint:         ep,
@@ -120,7 +120,7 @@ func generateHttpTransport(svc parser.Service, httpTransportPath string) error {
 			),
 			EndpointMethodData{
 				Module:           svc.Config.Module,
-				Service:          svc.Package,
+				Service:          svc.FormattedName,
 				ServiceImport:    svc.Import,
 				ServiceInterface: svc.Interface,
 				Endpoint:         ep,
@@ -147,7 +147,7 @@ func generateHttpTransport(svc parser.Service, httpTransportPath string) error {
 
 func generateService(svc parser.Service) error {
 	log.Debug("Starting service generation for ", svc.Name)
-	pth := path.Join(genPath(), "services", svc.Package)
+	pth := path.Join(genPath(), "services", svc.FormattedName)
 	epFolder := path.Join(pth, "endpoint")
 	httpTransportPath := path.Join(pth, "transport", "http")
 	if exists, _ := fs.Exists(epFolder); !exists {
@@ -186,12 +186,12 @@ func (g serviceGenerator) Generate() error {
 		if err != nil {
 			return err
 		}
-		handlerPath := path.Join(cmdPath(), svc.Name)
+		handlerPath := path.Join(cmdPath(), "app", svc.FormattedName)
 		if exists, _ := fs.Exists(handlerPath); !exists {
 			_ = fs.CreateFolder(handlerPath)
 		}
 
-		handlerPath = path.Join(handlerPath, fmt.Sprintf("%s.go", strcase.ToSnake(svc.Name)))
+		handlerPath = path.Join(handlerPath, fmt.Sprintf("%s.go", svc.FormattedName))
 		if exists, _ := fs.Exists(handlerPath); !exists {
 			err = assets.ParseAndWriteTemplate(
 				"cmd/service.go.tmpl",
@@ -202,13 +202,25 @@ func (g serviceGenerator) Generate() error {
 				return err
 			}
 		}
+
+		mainHandlerPath := path.Join(cmdPath(), fmt.Sprintf("%s.go", svc.FormattedName))
+		if exists, _ := fs.Exists(mainHandlerPath); !exists {
+			err = assets.ParseAndWriteTemplate(
+				"cmd/cmd.go.tmpl",
+				mainHandlerPath,
+				svc,
+			)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	handlerPath := cmdPath()
+	handlerPath := genPath()
 	if exists, _ := fs.Exists(handlerPath); !exists {
 		_ = fs.CreateFolder(handlerPath)
 	}
 
-	handlerPath = path.Join(handlerPath, fmt.Sprintf("%s.go", strcase.ToSnake(config.Get().Module)))
+	handlerPath = path.Join(handlerPath, "cmd", fmt.Sprintf("%s.go", strcase.ToSnake(config.Get().Module)))
 	if exists, _ := fs.Exists(handlerPath); !exists {
 		err := assets.ParseAndWriteTemplate(
 			"cmd/all.go.tmpl",

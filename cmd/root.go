@@ -1,15 +1,10 @@
 package cmd
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 
 	"github.com/spf13/cobra"
 )
-
-var log = logrus.WithFields(logrus.Fields{
-	"package": "cmd",
-})
 
 var rootCmd = &cobra.Command{
 	Use:          "gs",

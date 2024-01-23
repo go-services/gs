@@ -1,0 +1,10 @@
+{{- /*gotype: gs/parser.Service*/ -}}
+package main
+
+import (
+	svc "{{ .Config.Module }}/cmd/app/{{ .FormattedName }}"
+)
+
+func main() {
+	svc.New{{.Interface}}().Run()
+}

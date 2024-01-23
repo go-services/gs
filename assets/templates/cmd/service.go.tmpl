@@ -1,11 +1,17 @@
 {{- /*gotype: gs/parser.Service*/ -}}
-package main
+package {{ .Package }}
 
 import (
-	genSvc "{{ .Config.Module }}/gen/services/{{ .Package }}"
+	genSvc "{{ .Config.Module }}/gen/services/{{ .FormattedName }}"
+	genHttp "demo/gen/transport/http"
 	service "{{ .Import }}"
+	chi "github.com/go-chi/chi/v5"
 )
 
-func main() {
-	genSvc.New(service.New()).Run()
+func New{{.Interface}}(otherOptions ...genSvc.Option) genSvc.GeneratedService {
+	var options  = append([]genSvc.Option{}, otherOptions...)
+	return genSvc.New(
+			service.New(),
+			options...
+	)
 }

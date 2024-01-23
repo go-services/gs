@@ -82,7 +82,7 @@ func (b *Builder) Build() {
 		log.Info("Building service")
 		removeFile(fileName)
 		// build package
-		cmd, err := runCommand("go", "build", "-o", fileName, path.Join(b.watcher.gsConfig.Paths.Cmd, fmt.Sprintf("%s.go", b.watcher.gsConfig.Module)))
+		cmd, err := runCommand("go", "build", "-o", fileName, path.Join(b.watcher.gsConfig.Paths.Gen, "cmd", fmt.Sprintf("%s.go", b.watcher.gsConfig.Module)))
 		if err != nil {
 			log.Fatalf("Could not run 'go build' command: %s", err)
 		}

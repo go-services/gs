@@ -40,12 +40,13 @@ type Endpoint struct {
 }
 
 type Service struct {
-	Name      string
-	Interface string
-	Config    config.GSConfig
-	Import    string
-	Package   string
-	BaseRoute string
+	Name          string
+	Interface     string
+	Config        config.GSConfig
+	Import        string
+	Package       string
+	FormattedName string
+	BaseRoute     string
 
 	Endpoints   []Endpoint
 	Annotations []annotation.Annotation
@@ -85,36 +86,37 @@ func parseService(file AnnotatedFile) (*Service, error) {
 
 	impt := getPackageImport(cnf.Module, file.Path, file.Src.Package())
 
-	route := svcAnnotation.Get("route").String()
-	if route == "" {
-		log.Warnf("Service `%s` has no base route, the service name will be used as route", name)
-		route = name
+	basePath := svcAnnotation.Get("base").String()
+	if basePath == "" {
+		log.Warnf("Service `%s` has no base base path, the service name will be used as basePath", name)
+		basePath = name
 	}
-	if !strings.HasPrefix(route, "/") {
-		route = "/" + route
+	if !strings.HasPrefix(basePath, "/") {
+		basePath = "/" + basePath
 	}
-	if strings.HasSuffix(route, "/") {
-		route = route[:len(route)-1]
+	if strings.HasSuffix(basePath, "/") {
+		basePath = basePath[:len(basePath)-1]
 	}
 	service := &Service{
-		Interface:   inf.Name(),
-		BaseRoute:   route,
-		Config:      *cnf,
-		Name:        name,
-		Import:      impt,
-		Package:     file.Src.Package(),
-		Annotations: inf.Annotations(),
+		Interface:     inf.Name(),
+		BaseRoute:     basePath,
+		Config:        *cnf,
+		Name:          name,
+		FormattedName: strcase.ToSnake(name),
+		Import:        impt,
+		Package:       file.Src.Package(),
+		Annotations:   inf.Annotations(),
 	}
 
 	for _, method := range filterMethods(inf.Methods()) {
-		ep, err := parseEndpoint(method, route, service.Import, file.Path)
+		ep, err := parseEndpoint(method, basePath, service.Import, file.Path)
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("error while parsing endpoint `%s.%s` : %s", inf.Name(), method.Name(), err.Error()))
 		}
 
 		for _, ex := range service.Endpoints {
 			if ex.HttpTransport.MethodRoutes[0].Route == ep.HttpTransport.MethodRoutes[0].Route && ex.HttpTransport.MethodRoutes[0].Methods[0] == ep.HttpTransport.MethodRoutes[0].Methods[0] {
-				return nil, errors.New(fmt.Sprintf("endpoint `%s.%s` has the same route and method as `%s`", service.Interface, ep.Name, ex.Name))
+				return nil, errors.New(fmt.Sprintf("endpoint `%s.%s` has the same basePath and method as `%s`", service.Interface, ep.Name, ex.Name))
 			}
 		}
 

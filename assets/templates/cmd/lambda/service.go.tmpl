@@ -2,15 +2,11 @@
 package main
 
 import (
-	genSvc "{{ .Config.Module }}/gen/services/{{ .Package }}"
-	service "{{ .Import }}"
+	svc "{{ .Config.Module }}/cmd/app/{{ .FormattedName }}"
 	"github.com/aws/aws-lambda-go/lambda"
 	chiadapter "github.com/awslabs/aws-lambda-go-api-proxy/chi"
 )
 
 func main() {
-	svc := genSvc.New(
-		service.New(),
-	)
-	lambda.Start(chiadapter.NewV2(svc.Router()).Proxy)
+	lambda.Start(chiadapter.NewV2(svc.New{{.Interface}}().Router()).Proxy)
 }

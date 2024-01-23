@@ -238,7 +238,7 @@ func parseHttpRequestParams(req *code.Struct, request *HttpRequest) {
 func parseMethodRoutes(serviceRoute string, httpAnnotation annotation.Annotation) (routes []HttpMethodRoute) {
 	keepTrailingSlash := httpAnnotation.Get("keepTrailingSlash").Bool()
 	var methodsPrepared []string
-	// for now we won't support multiple methods for the same route, if I find that it is used it can be enabled.
+	// for now we won't support multiple methods for the same path, if I find that it is used it can be enabled.
 	//for _, method := range strings.Split(httpAnnotation.Get("method").String(), ",") {
 	//	methodsPrepared = append(methodsPrepared, strings.ToUpper(strings.TrimSpace(method)))
 	//}
@@ -247,14 +247,14 @@ func parseMethodRoutes(serviceRoute string, httpAnnotation annotation.Annotation
 		strings.ToUpper(strings.TrimSpace(httpAnnotation.Get("method").String())),
 	)
 
-	route := httpAnnotation.Get("route").String()
-	if !strings.HasPrefix(route, "/") {
-		route = "/" + route
+	path := httpAnnotation.Get("path").String()
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
 	}
 	methodRoute := HttpMethodRoute{
 		Name:    httpAnnotation.Get("Name").String(),
 		Methods: methodsPrepared,
-		Route:   serviceRoute + route,
+		Route:   serviceRoute + path,
 	}
 	routes = append(
 		routes,
@@ -262,11 +262,11 @@ func parseMethodRoutes(serviceRoute string, httpAnnotation annotation.Annotation
 	)
 	if !keepTrailingSlash {
 		if strings.HasSuffix(methodRoute.Route, "/") {
-			route = strings.TrimSuffix(route, "/")
+			path = strings.TrimSuffix(path, "/")
 		} else {
-			route += "/"
+			path += "/"
 		}
-		methodRoute.Route = serviceRoute + route
+		methodRoute.Route = serviceRoute + path
 		routes = append(
 			routes,
 			methodRoute,

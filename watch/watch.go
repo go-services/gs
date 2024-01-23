@@ -32,6 +32,10 @@ func (w *Watcher) handleUpdate(event watcher.Event) {
 	}
 	mustWatch := false
 	ext := filepath.Ext(pth)
+	extraExtensions := append([]string{}, w.gsConfig.WatchExtensions...)
+	if w.gsConfig.SST != nil {
+		extraExtensions = append(extraExtensions, ".ts")
+	}
 	for _, v := range append([]string{".go"}, w.gsConfig.WatchExtensions...) {
 		if v == ext {
 			mustWatch = true

@@ -7,7 +7,6 @@ import (
 	"gs/assets"
 	"gs/fs"
 	"os"
-	"os/exec"
 	"path"
 	"runtime"
 	"strings"
@@ -91,16 +90,15 @@ func generateProject(name string) error {
 	}
 
 	log.Infof("Generating project %s", formattedName)
-	cmd := exec.Command("gs", "generate")
 
-	err = cmd.Run()
+	err = generateServices()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Infof("Project %s created", formattedName)
-	log.Infof("Run `cd %s && go run %s.go` to start the app", formattedName, strcase.ToSnake(formattedName))
+	log.Infof("Run `cd %s && go run gen/cmd/%s.go` to start the app or gs watch to run and watch for changes", formattedName, strcase.ToSnake(formattedName))
 
 	return nil
 }
