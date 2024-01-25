@@ -4,9 +4,14 @@ import (
 	"gs/assets"
 	"gs/config"
 	"gs/fs"
+	"gs/parser"
 	"path"
 	"strings"
 )
+
+type Generator interface {
+	Generate() error
+}
 
 func genPath() string {
 	cnf := config.Get()
@@ -20,14 +25,14 @@ func genPath() string {
 func cmdPath() string {
 	cnf := config.Get()
 	cp := "cmd"
-	if cnf.Paths.Cmd != "" {
-		cp = cnf.Paths.Cmd
+	if cnf.Paths.Config != "" {
+		cp = cnf.Paths.Config
 	}
 	return cp
 }
 
-func Common() error {
-	log.Debug("Starting Common function")
+func CommonFiles() error {
+	log.Debug("Starting CommonFiles function")
 	gp := genPath()
 	log.Debug("Generated path: ", gp)
 	if exists, _ := fs.Exists(gp); !exists {
@@ -49,6 +54,29 @@ func Common() error {
 			return err
 		}
 	}
-	log.Debug("Finished Common function successfully")
+	log.Debug("Finished CommonFiles function successfully")
+	return nil
+}
+
+func LocalImplementation(services []parser.Service, cronJobs []parser.Cron) error {
+	handlerPath := genPath()
+	if exists, _ := fs.Exists(handlerPath); !exists {
+		_ = fs.CreateFolder(handlerPath)
+	}
+
+	handlerPath = path.Join(handlerPath, "cmd", "local", "main.go")
+	if exists, _ := fs.Exists(handlerPath); !exists {
+		err := assets.ParseAndWriteTemplate(
+			"cmd/all.go.tmpl",
+			handlerPath,
+			map[string]interface{}{
+				"Services": services,
+				"CronJobs": cronJobs,
+			},
+		)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

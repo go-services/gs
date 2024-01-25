@@ -1,6 +1,6 @@
 ---
 title: "Configuration"
-weight: 2
+weight: 3
 ---
 
 ## The `gs.json` file

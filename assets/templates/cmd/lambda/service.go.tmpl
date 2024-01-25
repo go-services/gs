@@ -2,7 +2,7 @@
 package main
 
 import (
-	svc "{{ .Config.Module }}/cmd/app/{{ .FormattedName }}"
+	svc "{{ .Config.Module }}/{{ .Config.Paths.Config }}/services/{{ .FormattedName }}"
 	"github.com/aws/aws-lambda-go/lambda"
 	chiadapter "github.com/awslabs/aws-lambda-go-api-proxy/chi"
 )

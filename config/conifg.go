@@ -13,8 +13,8 @@ import (
 var log = logrus.WithFields(logrus.Fields{"package": "config"})
 
 type GSPathConfig struct {
-	Gen string `json:"gen"`
-	Cmd string `json:"cmd"`
+	Gen    string `json:"gen"`
+	Config string `json:"config"`
 }
 
 type SSTConfig struct {
@@ -53,8 +53,8 @@ func (c *GSConfig) Reload() {
 func readConfig() *GSConfig {
 	cnf := &GSConfig{
 		Paths: GSPathConfig{
-			Gen: "gen",
-			Cmd: "cmd",
+			Gen:    "gen",
+			Config: "config",
 		},
 	}
 	if exists, _ := fs.Exists(".gs.json"); !exists {

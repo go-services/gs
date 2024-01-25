@@ -2,10 +2,7 @@ package watch
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"gs/config"
 	"gs/generate"
-	"gs/parser"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -27,44 +24,6 @@ func NewBuilder(w *Watcher, r *Runner) *Builder {
 	return &Builder{watcher: w, runner: r}
 }
 
-func generateServices() error {
-	log.Info("Generating services")
-	cnf := config.Get()
-	if cnf.Module == "" {
-		logrus.Error("Not in the root of the module")
-		return nil
-	}
-
-	files, err := parser.ParseFiles(".")
-	if err != nil {
-		return err
-	}
-	services, err := parser.FindServices(files)
-	if err != nil {
-		return err
-	}
-
-	err = generate.Common()
-	if err != nil {
-		return err
-	}
-
-	svcGen := generate.NewServiceGenerator(services)
-	err = svcGen.Generate()
-	if err != nil {
-		return err
-	}
-
-	if cnf.SST != nil {
-		sstGen := generate.NewSSTPlugin(services)
-		err = sstGen.Generate()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // Build listens watch events from Watcher and sends messages to Runner
 // when new changes are built.
 func (b *Builder) Build() {
@@ -74,7 +33,7 @@ func (b *Builder) Build() {
 	}()
 
 	for range b.watcher.Wait() {
-		err := generateServices()
+		err := generate.Generate()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -82,7 +41,7 @@ func (b *Builder) Build() {
 		log.Info("Building service")
 		removeFile(fileName)
 		// build package
-		cmd, err := runCommand("go", "build", "-o", fileName, path.Join(b.watcher.gsConfig.Paths.Gen, "cmd", fmt.Sprintf("%s.go", b.watcher.gsConfig.Module)))
+		cmd, err := runCommand("go", "build", "-o", fileName, path.Join(b.watcher.gsConfig.Paths.Gen, "cmd", "local", "main.go"))
 		if err != nil {
 			log.Fatalf("Could not run 'go build' command: %s", err)
 		}

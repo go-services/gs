@@ -9,15 +9,11 @@ import (
 	"path"
 )
 
-type SSTPlugin interface {
-	Generate() error
-}
-
 type sstPlugin struct {
 	services []parser.Service
 }
 
-func NewSSTPlugin(services []parser.Service) SSTPlugin {
+func NewSSTPlugin(services []parser.Service) Generator {
 	return &sstPlugin{
 		services: services,
 	}

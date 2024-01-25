@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"gs/assets"
 	"gs/fs"
+	"gs/generate"
 	"os"
 	"path"
 	"runtime"
@@ -91,7 +92,7 @@ func generateProject(name string) error {
 
 	log.Infof("Generating project %s", formattedName)
 
-	err = generateServices()
+	err = generate.Generate()
 
 	if err != nil {
 		log.Fatal(err)

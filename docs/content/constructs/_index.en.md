@@ -1,9 +1,9 @@
 ---
-title: "Annotations"
-icon: "/images/icons/at-sign.svg"
+title: "Constructs"
+icon: "/images/icons/bolt.svg"
 icon_bg: ""
-description: "What are GS annotations and how to use them."
-weight: 3
+description: "Learn about types of core constructs GS supports"
+weight: 2
 # don't create a separete page
 type: "docs"
 _build:

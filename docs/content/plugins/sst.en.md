@@ -1,5 +1,5 @@
 ---
-title: "Infrastructure as Code"
+title: "SST"
 weight: 1
 ---
 

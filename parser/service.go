@@ -47,6 +47,7 @@ type Service struct {
 	Package       string
 	FormattedName string
 	BaseRoute     string
+	NewMethod     string
 
 	Endpoints   []Endpoint
 	Annotations []annotation.Annotation
@@ -63,9 +64,8 @@ func (a Endpoint) CamelCaseName() string {
 
 func parseService(file AnnotatedFile) (*Service, error) {
 	cnf := config.Get()
-	inf, svcAnnotation := findServiceInterface(&file.Src)
+	inf, svcAnnotation := findServiceInterface(file.Src)
 	if inf == nil {
-		log.Debugf("File `%s` has no services interface", file.Path)
 		return nil, nil
 	}
 	name := strcase.ToSnake(svcAnnotation.Get("name").String())
@@ -75,13 +75,13 @@ func parseService(file AnnotatedFile) (*Service, error) {
 
 	var newMth *source.Function
 	for _, fn := range file.Src.Functions() {
-		if fn.Name() == "New" && len(fn.Results()) == 1 && fn.Results()[0].Type.Qualifier == inf.Name() {
+		if isExported(fn.Name()) && len(fn.Results()) == 1 && fn.Results()[0].Type.Qualifier == inf.Name() {
 			newMth = &fn
 			break
 		}
 	}
 	if newMth == nil {
-		return nil, errors.New(fmt.Sprintf("service `%s` has no New method, each service needs to have a New method that returns a Service", name))
+		return nil, errors.New(fmt.Sprintf("service `%s` has no constructor function, each service needs to have a function that returns a new instance.", name))
 	}
 
 	impt := getPackageImport(cnf.Module, file.Path, file.Src.Package())
@@ -98,10 +98,11 @@ func parseService(file AnnotatedFile) (*Service, error) {
 		basePath = basePath[:len(basePath)-1]
 	}
 	service := &Service{
-		Interface:     inf.Name(),
-		BaseRoute:     basePath,
-		Config:        *cnf,
 		Name:          name,
+		Config:        *cnf,
+		Interface:     inf.Name(),
+		NewMethod:     newMth.Name(),
+		BaseRoute:     basePath,
 		FormattedName: strcase.ToSnake(name),
 		Import:        impt,
 		Package:       file.Src.Package(),
@@ -162,7 +163,7 @@ func FindServices(files []AnnotatedFile) (services []Service, err error) {
 		}
 		services = append(services, *svc)
 	}
-	return
+	return services, nil
 }
 
 func getPackageImport(module string, pth string, pkg string) string {
@@ -173,7 +174,7 @@ func getPackageImport(module string, pth string, pkg string) string {
 	return fmt.Sprintf("%s/%s", module, dir)
 }
 
-func findServiceInterface(src *source.Source) (*source.Interface, *annotation.Annotation) {
+func findServiceInterface(src source.Source) (*source.Interface, *annotation.Annotation) {
 	for _, inf := range src.Interfaces() {
 		annotations := findAnnotations("service", inf.Annotations())
 		if len(annotations) > 0 {

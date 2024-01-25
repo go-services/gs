@@ -1,0 +1,16 @@
+{{- /*gotype: gs/parser.Cron*/ -}}
+package main
+
+import (
+	"github.com/robfig/cron/v3"
+	cron "{{.Import}}"
+)
+
+func main() {
+	c := cron.New()
+	_,err := c.AddJob("{{.Schedule}}", cron.{{.NewMethod}}())
+	if err != nil {
+		panic(err)
+	}
+	c.Start()
+}

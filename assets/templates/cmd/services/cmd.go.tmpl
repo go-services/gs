@@ -2,7 +2,7 @@
 package main
 
 import (
-	svc "{{ .Config.Module }}/cmd/app/{{ .FormattedName }}"
+	svc "{{ .Config.Module }}/{{ .Config.Paths.Config}}/services/{{ .FormattedName }}"
 )
 
 func main() {

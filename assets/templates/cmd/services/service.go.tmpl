@@ -11,7 +11,7 @@ import (
 func New{{.Interface}}(otherOptions ...genSvc.Option) genSvc.GeneratedService {
 	var options  = append([]genSvc.Option{}, otherOptions...)
 	return genSvc.New(
-			service.New(),
+			service.{{.NewMethod}}(),
 			options...
 	)
 }

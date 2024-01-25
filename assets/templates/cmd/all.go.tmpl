@@ -1,13 +1,18 @@
-{{- /*gotype: []gs/parser.Service*/ -}}
 package main
 
-{{ $firstSvc := index . 0}}
+{{ $service := .Services }}
+{{ $jobs := .CronJobs }}
+{{ $firstSvc := index $service 0}}
 import (
 	genHttp "{{ $firstSvc.Config.Module }}/gen/transport/http"
-	{{ range .}}
+	{{ range $service}}
 	gen{{camelCase .Name}}Svc "{{ .Config.Module }}/gen/services/{{ .FormattedName }}"
-	{{camelCase .Name}} "{{ .Config.Module }}/cmd/app/{{ .FormattedName }}"
+	{{camelCase .Name}} "{{ .Config.Module }}/{{.Config.Paths.Config}}/services/{{ .FormattedName }}"
 	{{ end }}
+	{{ range $jobs}}
+		job{{camelCase .Name}} "{{.Import}}"
+	{{ end }}
+	cron "github.com/robfig/cron/v3"
 	chi "github.com/go-chi/chi/v5"
 	"fmt"
 	"net"
@@ -25,7 +30,7 @@ import (
 func main() {
 	router := chi.NewRouter()
 	logger := log.NewLogfmtLogger(os.Stdout)
-	{{ range .}}
+	{{ range $service}}
 	{{camelCase .Name}}.New{{.Interface}}(
 			gen{{camelCase .Name}}Svc.WithHTTPOptions(
 			genHttp.WithRouter(router),
@@ -52,6 +57,25 @@ func main() {
 			}
 		})
 	}
+{{if gt (len $jobs) 0}}
+	{
+		g.Add(func() error {
+		c := cron.New()
+		{{ range $jobs}}
+		_,err := c.AddJob("{{.Schedule}}", job{{camelCase .Name}}.{{.NewMethod}}())
+		if err != nil {
+			return err
+		}
+		{{ end }}
+		c.Run()
+		return nil
+		}, func(error) {
+			if err != nil {
+				fmt.Printf("There where errors when starting the cron jobs : %v", err)
+			}
+		})
+	}
+{{end}}
 	{
 		var (
 			cancelInterrupt = make(chan struct{})

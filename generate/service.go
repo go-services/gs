@@ -2,18 +2,11 @@ package generate
 
 import (
 	"fmt"
-	"github.com/iancoleman/strcase"
 	"gs/assets"
-	"gs/config"
 	"gs/fs"
 	"gs/parser"
-	"os/exec"
 	"path"
 )
-
-type ServiceGenerator interface {
-	Generate() error
-}
 
 type EndpointMethodData struct {
 	Module           string
@@ -27,7 +20,7 @@ type serviceGenerator struct {
 	services []parser.Service
 }
 
-func NewServiceGenerator(services []parser.Service) ServiceGenerator {
+func NewServiceGenerator(services []parser.Service) Generator {
 	return &serviceGenerator{
 		services: services,
 	}
@@ -186,7 +179,7 @@ func (g serviceGenerator) Generate() error {
 		if err != nil {
 			return err
 		}
-		handlerPath := path.Join(cmdPath(), "app", svc.FormattedName)
+		handlerPath := path.Join(cmdPath(), "services", svc.FormattedName)
 		if exists, _ := fs.Exists(handlerPath); !exists {
 			_ = fs.CreateFolder(handlerPath)
 		}
@@ -194,7 +187,7 @@ func (g serviceGenerator) Generate() error {
 		handlerPath = path.Join(handlerPath, fmt.Sprintf("%s.go", svc.FormattedName))
 		if exists, _ := fs.Exists(handlerPath); !exists {
 			err = assets.ParseAndWriteTemplate(
-				"cmd/service.go.tmpl",
+				"cmd/services/service.go.tmpl",
 				handlerPath,
 				svc,
 			)
@@ -203,10 +196,10 @@ func (g serviceGenerator) Generate() error {
 			}
 		}
 
-		mainHandlerPath := path.Join(cmdPath(), fmt.Sprintf("%s.go", svc.FormattedName))
+		mainHandlerPath := path.Join(genPath(), "cmd", "services", svc.FormattedName, "main.go")
 		if exists, _ := fs.Exists(mainHandlerPath); !exists {
 			err = assets.ParseAndWriteTemplate(
-				"cmd/cmd.go.tmpl",
+				"cmd/services/cmd.go.tmpl",
 				mainHandlerPath,
 				svc,
 			)
@@ -215,22 +208,5 @@ func (g serviceGenerator) Generate() error {
 			}
 		}
 	}
-	handlerPath := genPath()
-	if exists, _ := fs.Exists(handlerPath); !exists {
-		_ = fs.CreateFolder(handlerPath)
-	}
-
-	handlerPath = path.Join(handlerPath, "cmd", fmt.Sprintf("%s.go", strcase.ToSnake(config.Get().Module)))
-	if exists, _ := fs.Exists(handlerPath); !exists {
-		err := assets.ParseAndWriteTemplate(
-			"cmd/all.go.tmpl",
-			handlerPath,
-			g.services,
-		)
-		if err != nil {
-			return err
-		}
-	}
-	cmd := exec.Command("go", "mod", "tidy")
-	return cmd.Run()
+	return nil
 }

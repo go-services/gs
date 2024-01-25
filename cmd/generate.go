@@ -3,9 +3,7 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"gs/config"
 	"gs/generate"
-	"gs/parser"
 )
 
 var generateCmd = &cobra.Command{
@@ -19,48 +17,10 @@ var generateCmd = &cobra.Command{
 		if b, _ := cmd.Flags().GetBool("debug"); b {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
-		return generateServices()
+		return generate.Generate()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(generateCmd)
-}
-
-func generateServices() error {
-	log.Info("Generating services")
-	cnf := config.Get()
-	if cnf.Module == "" {
-		logrus.Error("Not in the root of the module")
-		return nil
-	}
-
-	files, err := parser.ParseFiles(".")
-	if err != nil {
-		return err
-	}
-	services, err := parser.FindServices(files)
-	if err != nil {
-		return err
-	}
-
-	err = generate.Common()
-	if err != nil {
-		return err
-	}
-
-	svcGen := generate.NewServiceGenerator(services)
-	err = svcGen.Generate()
-	if err != nil {
-		return err
-	}
-
-	if cnf.SST != nil {
-		sstGen := generate.NewSSTPlugin(services)
-		err = sstGen.Generate()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
