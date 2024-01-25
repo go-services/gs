@@ -1,8 +1,8 @@
 ---
-title: "Constructs"
+title: "Core Concepts"
 icon: "/images/icons/bolt.svg"
 icon_bg: ""
-description: "Learn about types of core constructs GS supports"
+description: "Learn about the core concepts of GS."
 weight: 2
 # don't create a separete page
 type: "docs"
