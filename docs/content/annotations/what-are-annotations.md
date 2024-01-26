@@ -1,5 +1,5 @@
 ---
-title: "Annotations"
+title: "What are GS annotations"
 weight: 1
 ---
 ## What are GS annotations?
