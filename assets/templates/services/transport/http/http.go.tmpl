@@ -3,8 +3,8 @@
 package http
 
 import (
-	genEndpoints "{{ .Config.Module }}/gen/services/{{.FormattedName}}/endpoint"
-	genHttp "{{ .Config.Module }}/gen/transport/http"
+	genEndpoints "{{ .Config.Module }}/{{.Config.Paths.Gen}}/services/{{.FormattedName}}/endpoint"
+	genHttp "{{ .Config.Module }}/{{.Config.Paths.Gen}}/transport/http"
 )
 
 type endpointOptions struct {

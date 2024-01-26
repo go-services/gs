@@ -67,6 +67,7 @@ func generateProject(name string) error {
 		path.Join(formattedName, "example", "service.go"),
 		map[string]string{
 			"Module": strcase.ToSnake(formattedName),
+			"Gen":    "gen",
 		},
 	)
 	if err != nil {
@@ -80,6 +81,22 @@ func generateProject(name string) error {
 			"Module":  strcase.ToSnake(formattedName),
 			"Version": strings.TrimPrefix(runtime.Version(), "go"),
 		},
+	)
+	if err != nil {
+		return err
+	}
+	err = assets.ParseAndWriteTemplate(
+		"project/gitignore.tmpl",
+		path.Join(formattedName, ".gitignore"),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	err = assets.ParseAndWriteTemplate(
+		"project/gs.yaml.tmpl",
+		path.Join(formattedName, "gs.yaml"),
+		nil,
 	)
 	if err != nil {
 		return err

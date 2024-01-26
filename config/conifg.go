@@ -2,10 +2,11 @@ package config
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
+	"gopkg.in/yaml.v3"
 	"gs/fs"
 	"strconv"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -13,19 +14,29 @@ import (
 var log = logrus.WithFields(logrus.Fields{"package": "config"})
 
 type GSPathConfig struct {
-	Gen    string `json:"gen"`
-	Config string `json:"config"`
+	Gen    string `yaml:"gen"`
+	Config string `yaml:"config"`
+}
+
+type CORSConfig struct {
+	AllowOrigins     []string `yaml:"allow_origins"`
+	AllowMethods     []string `yaml:"allow_methods"`
+	AllowHeaders     []string `yaml:"allow_headers"`
+	AllowCredentials bool     `yaml:"allow_credentials"`
+	ExposeHeaders    []string `yaml:"expose_headers"`
+	MaxAge           int      `yaml:"max_age"`
 }
 
 type SSTConfig struct {
-	Path string `json:"path"`
+	Path string `yaml:"path"`
 }
 
 type GSConfig struct {
-	Module          string       `json:"-"`
-	Paths           GSPathConfig `json:"paths"`
-	SST             *SSTConfig   `json:"sst"`
-	WatchExtensions []string     `json:"watch_extensions"`
+	Module          string       `yaml:"-"`
+	Paths           GSPathConfig `yaml:"paths"`
+	SST             *SSTConfig   `yaml:"sst,omitempty"`
+	WatchExtensions []string     `yaml:"watch_extensions,omitempty"`
+	CORS            *CORSConfig  `yaml:"cors,omitempty"`
 }
 
 var config *GSConfig
@@ -57,16 +68,19 @@ func readConfig() *GSConfig {
 			Config: "config",
 		},
 	}
-	if exists, _ := fs.Exists(".gs.json"); !exists {
+	if exists, _ := fs.Exists("gs.yaml"); !exists {
 		return cnf
 	}
 
-	configData, err := fs.ReadFile(".gs.json")
+	configData, err := fs.ReadFile("gs.yaml")
 	if err != nil {
 		return cnf
 	}
 
-	_ = json.Unmarshal([]byte(configData), cnf)
+	_ = yaml.Unmarshal([]byte(configData), cnf)
+	cnf.Paths.Gen = strings.Replace(cnf.Paths.Gen, "\\", "/", -1)
+	cnf.Paths.Config = strings.Replace(cnf.Paths.Config, "\\", "/", -1)
+	log.Debugf("Read config: %+v", cnf)
 	return cnf
 }
 

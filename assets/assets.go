@@ -15,7 +15,7 @@ var log = logrus.WithFields(logrus.Fields{
 	"package": "assets",
 })
 
-//go:embed templates/*
+//go:embed templates
 var folder embed.FS
 
 var CustomFunctions = template.FuncMap{

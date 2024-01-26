@@ -3,8 +3,8 @@
 package http
 
 import (
-	definitions "{{ .Module }}/gen/services/{{.Service}}/endpoint/definitions"
-	genHttp "{{ .Module }}/gen/transport/http"
+	definitions "{{ .Module }}/{{.Config.Paths.Gen}}/services/{{.Service}}/endpoint/definitions"
+	genHttp "{{ .Module }}/{{.Config.Paths.Gen}}/transport/http"
 	service "{{ .ServiceImport }}"
 	{{ if .Endpoint.Request }} {{ $reqParam := index .Endpoint.Params 1}} {{ $reqParam.Type.Import.Alias }} "{{ $reqParam.Type.Import.Path }}" {{ end }}
 	{{ if .Endpoint.Response }} {{ $resParam := index .Endpoint.Results 0}} {{ $resParam.Type.Import.Alias }} "{{ $resParam.Type.Import.Path }}" {{ end }}

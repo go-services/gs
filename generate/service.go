@@ -3,6 +3,7 @@ package generate
 import (
 	"fmt"
 	"gs/assets"
+	"gs/config"
 	"gs/fs"
 	"gs/parser"
 	"path"
@@ -14,6 +15,7 @@ type EndpointMethodData struct {
 	ServiceImport    string
 	ServiceInterface string
 	Endpoint         parser.Endpoint
+	Config           *config.GSConfig
 }
 
 type serviceGenerator struct {
@@ -56,6 +58,7 @@ func generateEndpoints(sv parser.Service, endpointPath string) error {
 				ServiceImport:    sv.Import,
 				ServiceInterface: sv.Interface,
 				Endpoint:         ep,
+				Config:           config.Get(),
 			},
 		)
 		if err != nil {
@@ -117,6 +120,7 @@ func generateHttpTransport(svc parser.Service, httpTransportPath string) error {
 				ServiceImport:    svc.Import,
 				ServiceInterface: svc.Interface,
 				Endpoint:         ep,
+				Config:           config.Get(),
 			},
 		)
 		if err != nil {

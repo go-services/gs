@@ -4,9 +4,9 @@ package main
 {{ $jobs := .CronJobs }}
 {{ $firstSvc := index $service 0}}
 import (
-	genHttp "{{ $firstSvc.Config.Module }}/gen/transport/http"
+	genHttp "{{ $firstSvc.Config.Module }}/{{$firstSvc.Config.Paths.Gen}}/transport/http"
 	{{ range $service}}
-	gen{{camelCase .Name}}Svc "{{ .Config.Module }}/gen/services/{{ .FormattedName }}"
+	gen{{camelCase .Name}}Svc "{{ .Config.Module }}/{{$firstSvc.Config.Paths.Gen}}/services/{{ .FormattedName }}"
 	{{camelCase .Name}} "{{ .Config.Module }}/{{.Config.Paths.Config}}/services/{{ .FormattedName }}"
 	{{ end }}
 	{{ range $jobs}}

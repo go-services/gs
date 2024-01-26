@@ -6,7 +6,7 @@ weight: 1
 
 GS annotations are comments that you can add to your code to tell GS how to generate the code for your services.
 
-GS annotations use a the following format:
+GS annotations use the following format:
 
 ```go
 // @annotationName(key="value", key="value")

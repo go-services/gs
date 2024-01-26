@@ -6,7 +6,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	service "{{ .ServiceImport }}"
 {{ if .Endpoint.Request }} {{ $reqParam := index .Endpoint.Params 1}} {{ $reqParam.Type.Import.Alias }} "{{ $reqParam.Type.Import.Path }}" {{ end }}
-	"{{ .Module }}/gen/services/{{.Service}}/endpoint/definitions"
+	"{{ .Module }}/{{.Config.Paths.Gen}}/services/{{.Service}}/endpoint/definitions"
 )
 
 type {{ lowerFirst .Endpoint.Name  }} struct {

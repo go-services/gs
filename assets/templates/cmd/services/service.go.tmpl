@@ -2,8 +2,8 @@
 package {{ .Package }}
 
 import (
-	genSvc "{{ .Config.Module }}/gen/services/{{ .FormattedName }}"
-	genHttp "demo/gen/transport/http"
+	genSvc "{{ .Config.Module }}/{{.Config.Paths.Gen}}/services/{{ .FormattedName }}"
+	genHttp "{{ .Config.Module }}/{{.Config.Paths.Gen}}/transport/http"
 	service "{{ .Import }}"
 	chi "github.com/go-chi/chi/v5"
 )

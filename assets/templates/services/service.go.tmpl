@@ -3,9 +3,9 @@
 package auth
 
 import (
-	genEndpoint "{{ .Config.Module }}/gen/services/{{.FormattedName}}/endpoint"
-	genServiceHttp "{{ .Config.Module }}/gen/services/{{.FormattedName}}/transport/http"
-	genHttp "{{ .Config.Module }}/gen/transport/http"
+	genEndpoint "{{ .Config.Module }}/{{.Config.Paths.Gen}}/services/{{.FormattedName}}/endpoint"
+	genServiceHttp "{{ .Config.Module }}/{{.Config.Paths.Gen}}/services/{{.FormattedName}}/transport/http"
+	genHttp "{{ .Config.Module }}/{{.Config.Paths.Gen}}/transport/http"
 	service "{{ .Import }}"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-kit/kit/log"
