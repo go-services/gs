@@ -4,7 +4,7 @@ header_alt: true
 # Banner
 banner:
   title: "Streamlining Go Web Development"
-  subtitle: "No more boilerplate code 🔥"
+  subtitle: "🚧 Under development 🚧" # "No more boilerplate code 🔥"
   content: "Welcome to `GS`, an open-source tool crafted for Go developers. Our goal is simple: to streamline the development of Go web applications by automating boilerplate code generation. This project is not just a tool; it's a community effort to enhance the Go web development experience."
   enable_bg_pattern: true
   image: "/images/banner-image.png"
