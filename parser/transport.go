@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/go-services/code"
@@ -9,9 +11,9 @@ import (
 )
 
 type paramType string
-type requestFormat string
+type encodeFormat string
 
-func (v requestFormat) String() string {
+func (v encodeFormat) String() string {
 	return string(v)
 }
 
@@ -22,9 +24,9 @@ const (
 )
 
 const (
-	JSON requestFormat = "JSON"
-	XML  requestFormat = "XML"
-	FORM requestFormat = "FORM"
+	JSON encodeFormat = "JSON"
+	XML  encodeFormat = "XML"
+	FORM encodeFormat = "FORM"
 )
 
 type ParamParser struct {
@@ -83,7 +85,7 @@ type HttpRequestParam struct {
 
 type HttpRequest struct {
 	// the format the data is
-	Format requestFormat
+	Format encodeFormat
 	// if the request has any query params
 	HasUrl bool
 	// if the request has body portion
@@ -100,7 +102,7 @@ type HttpMethodRoute struct {
 
 type HttpTransport struct {
 	Request        *HttpRequest
-	ResponseFormat string
+	ResponseFormat encodeFormat
 	MethodRoutes   []HttpMethodRoute
 }
 
@@ -110,18 +112,23 @@ func parseHttpTransport(serviceRoute string, endpoint Endpoint) (*HttpTransport,
 		return nil, nil
 	}
 
+	methodRoutes, err := parseMethodRoutes(serviceRoute, httpAnnotations[0])
+
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("error while parsing endpoint `%s` : %s", endpoint.Name, err.Error()))
+	}
 	return &HttpTransport{
-		MethodRoutes:   parseMethodRoutes(serviceRoute, httpAnnotations[0]),
+		MethodRoutes:   methodRoutes,
 		Request:        parseHttpRequest(endpoint),
-		ResponseFormat: string(httpResponseFormat(httpAnnotations[0].Get("response").String())),
+		ResponseFormat: encodeFormat(httpResponseFormat(httpAnnotations[0].Get("response").String())),
 	}, nil
 }
 
-func httpResponseFormat(format string) requestFormat {
+func httpResponseFormat(format string) encodeFormat {
 	if format == "" {
 		return JSON
 	}
-	switch requestFormat(strings.ToUpper(format)) {
+	switch encodeFormat(strings.ToUpper(format)) {
 	case XML:
 		return XML
 	case FORM:
@@ -140,7 +147,7 @@ func parseHttpRequest(endpoint Endpoint) *HttpRequest {
 	annotationFormat := httpEncode.Get("request").String()
 	format := JSON
 	if annotationFormat != "" {
-		switch requestFormat(strings.ToUpper(annotationFormat)) {
+		switch encodeFormat(strings.ToUpper(annotationFormat)) {
 		case XML:
 			format = XML
 		case FORM:
@@ -213,7 +220,7 @@ func parseHttpRequestParams(req *code.Struct, request *HttpRequest) {
 		if gsBody != "" {
 			name, required := getParameter(gsBody)
 			format := JSON
-			switch requestFormat(strings.ToUpper(name)) {
+			switch encodeFormat(strings.ToUpper(name)) {
 			case XML:
 				format = XML
 			case FORM:
@@ -235,16 +242,21 @@ func parseHttpRequestParams(req *code.Struct, request *HttpRequest) {
 	return
 }
 
-func parseMethodRoutes(serviceRoute string, httpAnnotation annotation.Annotation) (routes []HttpMethodRoute) {
+func parseMethodRoutes(serviceRoute string, httpAnnotation annotation.Annotation) (routes []HttpMethodRoute, err error) {
 	keepTrailingSlash := httpAnnotation.Get("keepTrailingSlash").Bool()
 	var methodsPrepared []string
 	// for now we won't support multiple methods for the same path, if I find that it is used it can be enabled.
 	//for _, method := range strings.Split(httpAnnotation.Get("method").String(), ",") {
 	//	methodsPrepared = append(methodsPrepared, strings.ToUpper(strings.TrimSpace(method)))
 	//}
+	method := strings.ToUpper(strings.TrimSpace(httpAnnotation.Get("method").String()))
+	// check if the method is valid
+	if method != "GET" && method != "POST" && method != "PUT" && method != "DELETE" && method != "PATCH" && method != "OPTIONS" && method != "HEAD" {
+		return nil, errors.New(fmt.Sprintf("method `%s` is not valid", method))
+	}
 	methodsPrepared = append(
 		methodsPrepared,
-		strings.ToUpper(strings.TrimSpace(httpAnnotation.Get("method").String())),
+		method,
 	)
 
 	path := httpAnnotation.Get("path").String()

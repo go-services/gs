@@ -54,7 +54,7 @@ func parseCronJob(file AnnotatedFile) (*Cron, error) {
 		}
 	}
 	if newMth == nil {
-		return nil, errors.New(fmt.Sprintf("cron %s has no constructor function, earch cron needs to have a function that returns a new instance", name))
+		return nil, errors.New(fmt.Sprintf("cron %s has no constructor function, each cron needs to have a function that returns a new instance", name))
 	}
 	var runMth *source.InterfaceMethod
 	for _, method := range inf.Methods() {

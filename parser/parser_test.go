@@ -10,6 +10,7 @@ import (
 
 func setup() {
 	fs.SetTestFs(afero.NewMemMapFs())
+	_ = fs.WriteFile("go.mod", "module test")
 }
 
 func TestReadIgnoreFile_WithValidFile(t *testing.T) {

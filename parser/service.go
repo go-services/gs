@@ -3,17 +3,18 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"github.com/go-services/annotation"
-	"github.com/go-services/code"
-	"github.com/go-services/source"
-	"github.com/iancoleman/strcase"
 	"gs/config"
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/go-services/annotation"
+	"github.com/go-services/code"
+	"github.com/go-services/source"
+	"github.com/iancoleman/strcase"
 )
 
 // this is used from findStruct() if the file was already read we don't
@@ -328,7 +329,7 @@ func findStruct(tp code.Type) (*code.Struct, error) {
 	if tp.Import.FilePath == "" {
 		return nil, notFoundErr
 	}
-	fls, err := ioutil.ReadDir(tp.Import.FilePath)
+	fls, err := os.ReadDir(tp.Import.FilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +345,7 @@ func findStruct(tp code.Type) (*code.Struct, error) {
 		if src, ok := fileSourceCache[filePath]; ok {
 			fileSource = src
 		} else {
-			data, err := ioutil.ReadFile(filePath)
+			data, err := os.ReadFile(filePath)
 			if err != nil {
 				return nil, err
 			}
