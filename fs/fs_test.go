@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -94,7 +93,6 @@ func TestFs_Walk(t *testing.T) {
 
 	var files []string
 	err := Walk("/", func(path string, info os.FileInfo, err error) error {
-		fmt.Println(path)
 		if err != nil {
 			return err
 		}

@@ -43,7 +43,7 @@ func Generate() error {
 	}
 
 	if cnf.SST != nil {
-		sstGen := NewSSTPlugin(services)
+		sstGen := NewSSTPlugin(services, jobs)
 		err = sstGen.Generate()
 		if err != nil {
 			return err

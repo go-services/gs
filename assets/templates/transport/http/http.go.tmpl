@@ -273,3 +273,14 @@ func DecodeFormRequest(r *goHttp.Request, strc interface{}) error {
 	}
 	return decoder.Decode(strc, r.PostForm)
 }
+
+type Validator interface {
+	Validate() error
+}
+
+func ValidateRequest(req interface{}) error {
+	if validator, ok := req.(Validator); ok {
+		return validator.Validate()
+	}
+	return nil
+}

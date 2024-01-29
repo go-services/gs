@@ -39,10 +39,13 @@ func parseCronJob(file AnnotatedFile) (*Cron, error) {
 	}
 
 	schedule := ann.Get("schedule").String()
+	parser := cron.NewParser(
+		cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor | cron.SecondOptional,
+	)
 	if schedule == "" {
 		return nil, errors.New(fmt.Sprintf("cron %s has no schedule annotation", name))
 	}
-	if _, err := cron.ParseStandard(schedule); err != nil {
+	if _, err := parser.Parse(schedule); err != nil {
 		return nil, errors.New(fmt.Sprintf("cron %s has an invalid schedule annotation", name))
 	}
 

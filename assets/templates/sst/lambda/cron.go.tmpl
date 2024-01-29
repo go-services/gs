@@ -1,0 +1,15 @@
+{{- /*gotype: gs/parser.Cron*/ -}}
+package main
+
+import (
+	cron "{{.Import}}"
+	"github.com/aws/aws-lambda-go/lambda"
+)
+
+func run() error {
+	return cron.{{.NewMethod}}().Run()
+}
+
+func main() {
+	lambda.Start(run)
+}

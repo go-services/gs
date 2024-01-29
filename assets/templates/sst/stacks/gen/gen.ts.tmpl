@@ -1,22 +1,32 @@
-{{- /*gotype: []gs/parser.Service*/ -}}
 import {App, FunctionProps, StackContext, Api, ApiProps} from "sst/constructs";
 export function addGenStack(app:App, defaultFuncProps?: FunctionProps, props?:ApiProps){
     function GenStack({ stack }: StackContext) {
         const api  = new Api(stack, "GenApi", {
             ...props,
             routes: {
-                {{ range $service := . }}
+                {{ range $service := .Services }}
                 "ANY {{ $service.BaseRoute}}/{proxy+}": {
                     function:{
                         ...defaultFuncProps,
                         runtime: "go",
-                        handler : "{{.Config.CmdPath}}/{{.Name}}/lambda.go",
+                        handler : "{{.Config.Paths.Gen}}/cmd/sst/services/{{.FormattedName}}/main.go",
                     }
                 },
                 {{ end }}
             },
         });
 
+        {{ range $job := .Jobs }}
+            new Cron(stack, "Cron{{$job.FormattedName}}", {
+                ...defaultFuncProps,
+                job: {
+                    ...defaultFuncProps,
+                    runtime: "go",
+                    handler : "{{.Config.Paths.Gen}}/cmd/sst/jobs/{{.FormattedName}}/main.go",
+                },
+                schedule: "cron({{$job.Schedule}})",
+            });
+        {{end}}
         stack.addOutputs({
             ApiEndpoint: api.url,
         });

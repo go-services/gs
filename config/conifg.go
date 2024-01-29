@@ -28,7 +28,7 @@ type CORSConfig struct {
 }
 
 type SSTConfig struct {
-	Path string `yaml:"path"`
+	StacksPath string `yaml:"stacks_path"`
 }
 
 type GSConfig struct {
@@ -61,6 +61,20 @@ func (c *GSConfig) Reload() {
 	}
 	config = _cnf
 }
+
+func Exists() bool {
+	exists, _ := fs.Exists("gs.yaml")
+	return exists
+}
+
+func (c *GSConfig) Write() error {
+	data, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+	return fs.WriteFile("gs.yaml", string(data))
+}
+
 func readConfig() *GSConfig {
 	cnf := &GSConfig{
 		Paths: GSPathConfig{

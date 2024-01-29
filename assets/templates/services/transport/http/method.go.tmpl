@@ -72,6 +72,7 @@ func make{{ .Endpoint.Name }}Decoder(httpOptions genHttp.Options) {{ .Endpoint.N
 			{{ $tp := .Endpoint.HttpTransport}}
 			{{if not $tp.Request.HasBody }}
 			   err = httpOptions.{{httpRequestDecoder $tp.Request.Format.String }}()(r, &request)
+			   err = genHttp.ValidateRequest(request)
 			{{ end }}
 			{{range $param := $tp.Request.Params }}
 				{{$parser := $param.Parser}}
@@ -90,6 +91,7 @@ func make{{ .Endpoint.Name }}Decoder(httpOptions genHttp.Options) {{ .Endpoint.N
 				{{range $param := .Request.Params }}
 					{{if eq $param.ParamType "BODY"}}
 						err = httpOptions.{{httpRequestDecoder $param.Name }}(r, {{if not $param.Type.Pointer}}&{{end}}request.{{$param.Field}})
+						err = genHttp.ValidateRequest(request.{{$param.Field}})
 					{{ end }}
 				{{ end}}
 			{{ end }}
@@ -102,7 +104,7 @@ func make{{ .Endpoint.Name }}Decoder(httpOptions genHttp.Options) {{ .Endpoint.N
 
 func make{{ .Endpoint.Name }}Encoder(httpOptions genHttp.Options) {{ .Endpoint.Name }}EncodeResponseFunc {
     return func (ctx context.Context, w goHttp.ResponseWriter{{if .Endpoint.Response}}, response  {{ $respParam := index .Endpoint.Results 0 }} {{ $respParam.Type }} {{ end }}) error {
-        {{if .Endpoint.Response}}return httpOptions.{{ httpResponseEncoder  .Endpoint.HttpTransport.ResponseFormat  }}()(ctx, w, response){{else}}
+        {{if .Endpoint.Response}}return httpOptions.{{ httpResponseEncoder  .Endpoint.HttpTransport.ResponseFormat.String  }}()(ctx, w, response){{else}}
 			w.WriteHeader(200)
 			return nil{{ end }}
     }
